@@ -1,0 +1,9 @@
+@import './base.css';
+
+body,
+html,
+#app {
+  overflow: hidden; 
+  
+}
+
