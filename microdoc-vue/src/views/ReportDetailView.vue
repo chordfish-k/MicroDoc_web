@@ -64,9 +64,11 @@ onMounted(async () => {
         }
     })
 
-    const data_P = dataProcess(positiveData)
-    const data_N = dataProcess(negativeData)
-    const data_S = dataProcess(statusData)
+    const data_P = dataProcess(positiveData, 0.001)
+    // console.log(data_P)
+    const data_N = dataProcess(negativeData, 0.001)
+    const data_S = dataProcessS(statusData, 1)
+
     // netural
     const data_C = []
     for (let i = 0; i < data_P.length; i++) {
@@ -74,11 +76,11 @@ onMounted(async () => {
     }
 
     // chart1
-    option1.value = chart1OptionProcess(data_P, data_N, data_C, data_P.length)
+    option1.value = chart1OptionProcess(data_P, data_N, data_C, data_P[data_P.length - 1][0])
     myChart1.setOption(option1.value)
 
     // chart2
-    option2.value = chart2OptionProcess(data_S, data_S.length)
+    option2.value = chart2OptionProcess(data_S, data_S[data_P.length - 1][0])
     myChart2.setOption(option2.value)
 
 
@@ -98,14 +100,27 @@ onMounted(async () => {
 
 
 // 处理图表数据
-const dataProcess = (data: ReportData) => {
+const dataProcess = (data: ReportData, k: number) => {
     const x: number[] = data.x.split(',').map((x) => { return Number.parseInt(x) }) || []
-    const y: number[] = data.y.split(',').map((y) => { return Number.parseInt(y) / 1000.0 }) || []
+    const y: number[] = data.y.split(',').map((y) => { return Number.parseInt(y) * k }) || []
     let dataSource = []
     if (x.length) {
 
         for (let i = 0; i < x.length; i++) {
             dataSource.push([x[i], y[i]])
+        }
+    }
+    return dataSource
+}
+
+const dataProcessS = (data: ReportData, k: number) => {
+    const x: number[] = data.x.split(',').map((x) => { return Number.parseInt(x) }) || []
+    const y: number[] = data.y.split(',').map((y) => { return Number.parseInt(y) * k }) || []
+    let dataSource = []
+    if (x.length) {
+
+        for (let i = 0; i < x.length; i++) {
+            dataSource.push([x[i], y[i] + 1])
         }
     }
     return dataSource
@@ -119,6 +134,10 @@ const chart1OptionProcess = (
     const option: ECOption = {
         title: {
             text: 'chart1',
+        },
+        tooltip: {
+            trigger: 'axis',
+            valueFormatter: (value: any) => value.toFixed(2)
         },
         legend: {
             data: ['positive', 'negative', 'netural'],
@@ -139,7 +158,7 @@ const chart1OptionProcess = (
             },
             minorSplitLine: {
                 show: true
-            }
+            },
         },
         yAxis: {
             name: '概率(%)',
@@ -159,10 +178,10 @@ const chart1OptionProcess = (
                 //显示数据点标记
                 showSymbol: false,
                 //是否裁剪超出坐标系部分的图形
-                clip: false,
+                clip: true,
                 //数据
                 data: data_P,
-                smooth: true,
+                // smooth: true,
             },
             {
                 type: 'line',
@@ -170,7 +189,7 @@ const chart1OptionProcess = (
                 showSymbol: false,
                 clip: false,
                 data: data_N,
-                smooth: true,
+                // smooth: true,
             },
             {
                 type: 'line',
@@ -178,7 +197,7 @@ const chart1OptionProcess = (
                 showSymbol: false,
                 clip: false,
                 data: data_C,
-                smooth: true,
+                // smooth: true,
             }
         ],
         dataZoom: [
@@ -204,6 +223,12 @@ const chart2OptionProcess = (
             text: 'chart2',
         },
         animation: false,
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                axis: 'x'
+            }
+        },
         toolbox: {
             feature: {
                 saveAsImage: {}
@@ -213,23 +238,35 @@ const chart2OptionProcess = (
             name: '帧',
             min: 0,
             max: maxX,
+            boundaryGap: false,
             minorTick: {
                 show: true
             },
             minorSplitLine: {
                 show: true
-            }
+            },
         },
         yAxis: {
-            name: '概率(%)',
-            min: 0,
-            max: 1,
-            minorTick: {
-                show: true
+            name: '状态',
+            axisLabel: {
+                interval: 0,
+                rotate: - 20
             },
-            minorSplitLine: {
-                show: true
-            }
+            data: [
+                'positive',
+                'netural',
+                'negative'
+            ],
+            // name: '概率(%)',
+            min: 0,
+            max: 2,
+
+            // minorTick: {
+            //     show: true
+            // },
+            // minorSplitLine: {
+            //     show: true
+            // }
         },
         series: [
             {
@@ -237,7 +274,7 @@ const chart2OptionProcess = (
                 //显示数据点标记
                 showSymbol: false,
                 //是否裁剪超出坐标系部分的图形
-                clip: false,
+                clip: true,
                 //数据
                 data: data_S,
             }

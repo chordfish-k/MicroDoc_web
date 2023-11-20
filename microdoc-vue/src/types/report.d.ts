@@ -1,4 +1,5 @@
 import type { ReportType } from "@/apis/constants"
+import type { Page, PageResult } from "./page"
 
 export type Report = {
     id: number

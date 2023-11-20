@@ -72,7 +72,7 @@ onUpdated(() => {
 
 
 const dataProcess = () => {
-    const x: number[] = props.data?.x?.split(',').map((x) => { return Number.parseInt(x) / 100.0 }) || []
+    const x: number[] = props.data?.x?.split(',').map((x) => { return Number.parseInt(x) / 1000.0 }) || []
     const y: number[] = props.data?.y?.split(',').map((y) => { return Number.parseInt(y) }) || []
 
     if (x.length) {
