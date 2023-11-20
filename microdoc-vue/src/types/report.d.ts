@@ -18,6 +18,8 @@ export type ReportCapture = {
     before: number
     after: number
     time: string
+    beforeStr: string
+    afterStr: string
 }
 
 export type ReportDetail = Report & {

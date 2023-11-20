@@ -33,10 +33,28 @@ let statusData: ReportData
 const option1 = ref<ECOption>({})
 const option2 = ref<ECOption>({})
 
+const statusFlagToStr = (flag: number) => {
+    switch (flag) {
+        case 0:
+            return "Negative"
+        case 1:
+            return "Neutral"
+        case 2:
+            return "Positive"
+    }
+    return "None"
+}
+
 // 获取报告数据
 const reportQueryDetailData = async () => {
     const res = await reportQueryDetailAPI(Number.parseInt(router.params.id as string))
     report.value = res.data
+
+    // 处理capture变化前后的整型标识
+    report.value.captures.forEach(c => {
+        c.beforeStr = statusFlagToStr(c.before)
+        c.afterStr = statusFlagToStr(c.after)
+    })
 }
 
 // 挂载后触发
@@ -140,7 +158,7 @@ const chart1OptionProcess = (
             valueFormatter: (value: any) => value.toFixed(2)
         },
         legend: {
-            data: ['positive', 'negative', 'netural'],
+            data: ['Positive', 'Negative', 'Neutral'],
         },
         animation: false,
         toolbox: {
@@ -253,9 +271,9 @@ const chart2OptionProcess = (
                 rotate: - 20
             },
             data: [
-                'positive',
-                'netural',
-                'negative'
+                'Positive',
+                'Neutral',
+                'Negative'
             ],
             // name: '概率(%)',
             min: 0,
@@ -322,11 +340,11 @@ const chart2OptionProcess = (
                                  @click="console.log(scope.row.imgB64)">
                         </template>
                     </el-table-column>
-                    <el-table-column property="before"
+                    <el-table-column property="beforeStr"
                                      label="变化前"
                                      width="120">
                     </el-table-column>
-                    <el-table-column property="after"
+                    <el-table-column property="afterStr"
                                      label="变化后"
                                      width="120">
                     </el-table-column>
