@@ -4,7 +4,7 @@ import TestChart from '@/views/components/TestChart.vue'
 import RateChart from '@/views/components/RateChart.vue'
 import type { Report, ReportDetail } from '@/types/report'
 import { reportQueryDetailAPI } from '@/apis/report'
-import { onMounted, ref } from 'vue';
+import { type Ref, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ReportType } from '@/apis/constants';
 import { type ECOption } from "@/views/components/echarts"
@@ -13,11 +13,11 @@ import echarts from "@/views/components/echarts"
 // 使用ref创建虚拟DOM引用，使用时用main.value
 const chart1 = ref()
 const chart2 = ref()
-const chart3 = ref()
+
 // 图表对象
 let myChart1: echarts.ECharts
 let myChart2: echarts.ECharts
-let myChart3: echarts.ECharts
+let eegCharts: echarts.ECharts[]
 
 const router = useRoute()
 
@@ -28,10 +28,12 @@ const report = ref<ReportDetail>()
 let positiveData: ReportData
 let negativeData: ReportData
 let statusData: ReportData
+const eegDatas = ref<ReportData[]>([])
 
 // 用于echart的数据源
 const option1 = ref<ECOption>({})
 const option2 = ref<ECOption>({})
+// const eegOptions = ref<ECOption[]>([])
 
 const statusFlagToStr = (flag: number) => {
     switch (flag) {
@@ -68,16 +70,23 @@ onMounted(async () => {
     console.log(report.value)
 
     // 处理图表数据
-    report.value!.datas.forEach(x => {
-        switch (x.type) {
+    eegDatas.value = []
+
+    report.value!.datas.forEach(data => {
+        switch (data.type) {
             case ReportType.CHART1_POSITIVE:
-                positiveData = x
+                positiveData = data
                 break
             case ReportType.CHART1_NEGATIVE:
-                negativeData = x
+                negativeData = data
                 break
             case ReportType.CHART2_STATUS:
-                statusData = x
+                statusData = data
+                break
+            case ReportType.CHART3_EEG:
+                eegDatas.value.push(data)
+                // eegChartsRef.value.push(ref())
+                console.log("eeg", data)
                 break
         }
     })
@@ -86,6 +95,7 @@ onMounted(async () => {
     // console.log(data_P)
     const data_N = dataProcess(negativeData, 0.001)
     const data_S = dataProcessS(statusData, 1)
+
 
     // netural
     const data_C = []
@@ -101,6 +111,17 @@ onMounted(async () => {
     option2.value = chart2OptionProcess(data_S, data_S[data_P.length - 1][0])
     myChart2.setOption(option2.value)
 
+    // eegChart
+    // eegOptions.value = []
+    // for (let i = 0; i < eegDatas.length; i++) {
+    //     const data_E = dataProcess(eegDatas[i], 0.001)
+    //     eegOptions.value[i] = (chartEEGOptionProcess(i + 1, data_E, data_E[data_E.length - 1][0]))
+    //     eegCharts[i] = echarts.init(eegChartsRef.value[i].value)
+    //     eegCharts[i].setOption(eegOptions.value[i])
+    // }
+
+
+    // console.log(eegChartsRef.value)
 
     // 双表联动datazoom
     echarts.connect([myChart1, myChart2])
@@ -151,7 +172,7 @@ const chart1OptionProcess = (
     maxX: number) => {
     const option: ECOption = {
         title: {
-            text: 'chart1',
+            text: 'Probability',
         },
         tooltip: {
             trigger: 'axis',
@@ -238,7 +259,7 @@ const chart2OptionProcess = (
     maxX: number) => {
     const option: ECOption = {
         title: {
-            text: 'chart2',
+            text: 'Status',
         },
         animation: false,
         tooltip: {
@@ -311,57 +332,75 @@ const chart2OptionProcess = (
 
     return option
 }
+
+
 </script>
 
 <template>
-    <div style="display: flex"
-         id="box">
-        <div style="display: block;">
+    <div>
+        <div style="display: flex"
+             id="box">
+            <div style="display: block;">
+                <el-card class="card">
+                    <div ref="chart1"
+                         style="width:100%; height:35vh"></div>
+                </el-card>
+                <el-card class="card">
+                    <div ref="chart2"
+                         id="chart2"
+                         style="width:100%; height:35vh"></div>
+                </el-card>
+            </div>
             <el-card class="card">
-                <div ref="chart1"
-                     style="width:100%; height:35vh"></div>
-            </el-card>
-            <el-card class="card">
-                <div ref="chart2"
-                     id="chart2"
-                     style="width:100%; height:35vh"></div>
+                <el-scrollbar>
+                    <el-table ref="multipleTableRef"
+                              :data="report?.captures"
+                              style="width: 100%; height: 75vh;">
+                        <el-table-column label="捕获图片">
+                            <template #default="scope">
+                                <img :src="scope.row.imgB64"
+                                     width="64"
+                                     height="64"
+                                     @click="console.log(scope.row.imgB64)">
+                            </template>
+                        </el-table-column>
+                        <el-table-column property="beforeStr"
+                                         label="变化前"
+                                         width="120">
+                        </el-table-column>
+                        <el-table-column property="afterStr"
+                                         label="变化后"
+                                         width="120">
+                        </el-table-column>
+                        <el-table-column property="time"
+                                         label="时间"
+                                         sortable
+                                         show-overflow-tooltip />
+                    </el-table>
+                </el-scrollbar>
+
             </el-card>
         </div>
-        <el-card class="card">
-            <el-scrollbar>
-                <el-table ref="multipleTableRef"
-                          :data="report?.captures"
-                          style="width: 100%; height: 75vh;">
-                    <el-table-column label="捕获图片">
-                        <template #default="scope">
-                            <img :src="scope.row.imgB64"
-                                 width="64"
-                                 height="64"
-                                 @click="console.log(scope.row.imgB64)">
-                        </template>
-                    </el-table-column>
-                    <el-table-column property="beforeStr"
-                                     label="变化前"
-                                     width="120">
-                    </el-table-column>
-                    <el-table-column property="afterStr"
-                                     label="变化后"
-                                     width="120">
-                    </el-table-column>
-                    <el-table-column property="time"
-                                     label="时间"
-                                     sortable
-                                     show-overflow-tooltip />
-                </el-table>
-            </el-scrollbar>
-
-        </el-card>
+        <div>
+            <div style="display: block;"
+                 v-for="(data, index) in eegDatas">
+                <!-- hello -->
+                <RateChart class="card2"
+                           :data="data"
+                           :name="'EEG Channel ' + (index + 1)" />
+            </div>
+        </div>
     </div>
 </template>
 
 <style scoped>
 .card {
     max-width: 50vw;
+    margin: 1rem 1rem;
+}
+
+.card2 {
+    max-width: 100vw;
     margin: 1rem 1rem;
 }
 </style>
