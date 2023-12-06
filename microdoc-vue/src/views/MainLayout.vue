@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import {
     Menu as IconMenu,
     PieChart,
@@ -31,7 +31,8 @@ const handleSelect = (index: string, indexPath: string) => {
     currentTab.value = index
 }
 
-// 获取用户信息
+
+// 用户信息
 const userInfo = ref({} as User)
 
 onMounted(() => {
@@ -42,10 +43,11 @@ onMounted(() => {
     }
 })
 
+
 // 登出
 const logout = () => {
     userStore.clearUserInfo()
-    router.replace({ path: '/login' });
+    router.replace({ path: '/login' })
 }
 
 </script>
@@ -134,7 +136,7 @@ const logout = () => {
 
 .main {
     width: 100%;
-    max-height: 700px;
+    height: 100vh;
     padding-bottom: 2rem;
 }
 
