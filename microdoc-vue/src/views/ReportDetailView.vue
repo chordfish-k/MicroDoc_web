@@ -291,14 +291,14 @@ const chart2OptionProcess = (
                 interval: 0,
                 rotate: - 20
             },
-            data: [
+            data: ['',
                 'Positive',
                 'Neutral',
                 'Negative'
             ],
             // name: '概率(%)',
-            min: 0,
-            max: 2,
+            min: 1,
+            max: 3,
 
             // minorTick: {
             //     show: true
